@@ -10,6 +10,7 @@ import json
 
 # Filenames
 log_filename = '/home/pi/ipublish/ipublish.log'
+urllog_filename = '/home/pi/ipublish/urls.log'
 json_filename = '/home/pi/ipublish/params.json'
 motion_log_filename = '/home/pi/motion.log'
 
@@ -143,6 +144,7 @@ else:
 
 # Paste it
 logging.info('Trying to upload to pastebin with name `' + paste_name + '` and message `' + ip_str + '` plus ' + str(num_new_log_lines) + ' motion log lines.')
+pburl = ''
 try:
     pburl = pb.paste(dev_key, paste_string, my_key, paste_name, None, 'unlisted', '1D')
     logging.info('Successful pastebin url: ' + pburl)
@@ -156,6 +158,21 @@ except PastebinError as e:
 except:
     e = sys.exc_info()[0]
     logging.warning('Unknown error: ' + str(e))
+
+# Append url to url log
+if pburl:
+    logging.info('Got a pastebin url. Writing to url log.')
+    logstr = now_str + '\t' + pburl
+    try:
+        with open(urllog_filename, 'a') as f:
+            logging.info('Opened url log `' + urllog_filename + '`')
+            f.write(logstr + '\n')
+            logging.info('Appended `' + logstr + '`')
+    except:
+        e = sys.exc_info()[0]
+        logging.warning('Writing to `' + urllog_filename + '` failed: ' + str(e))
+else:
+    logging.warning('No pb url, no writing.')
 
 logging.info('Ended script.')
 
