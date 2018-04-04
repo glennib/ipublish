@@ -147,7 +147,12 @@ try:
     pburl = pb.paste(dev_key, paste_string, my_key, paste_name, None, 'unlisted', '1D')
     logging.info('Successful pastebin url: ' + pburl)
 except PastebinError as e:
-    logging.warning('Got a pastebin error, most likely it is OK. Error message: ' + str(e))
+    logging.info('Got a pastebin error, checking if it is an http vs https issue.')
+    if e.message.startswith('https://pastebin.com/'):
+        pburl = e.message
+        logging.info('Message starts with `https://pastebin.com/` so it is assumed to not be an actual error. Url: ' + pburl)
+    else:
+        logging.warning('Got a real pastebin error: ' + str(e))
 except:
     e = sys.exc_info()[0]
     logging.warning('Unknown error: ' + str(e))
