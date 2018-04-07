@@ -99,6 +99,24 @@ def get_ip_address(ifname):
     )[20:24])
     return ip_address_str
 
+# Filter log string
+logging.info('Filtering log string.')
+filtered_log_string = ''
+num_filtered_lines = 0
+for line in motion_log_string.splitlines():
+    if '[EVT]' in line:
+        filtered_log_string += line + '\n'
+        num_filtered_lines += 1
+filtered_log_string = filtered_log_string.strip()
+logging.info('Filtered log string to ' + str(num_filtered_lines) + ' lines.')
+try:
+    with open('/home/pi/ipublish/test.log', 'a') as f:
+        logging.info('Writing filtered log string to test log.')
+        f.write(filtered_log_string + '\n')
+except:
+    e = sys.exc_info()[0]
+    logging.warning('Unknown error ' + str(e))
+
 # Get time
 now = datetime.now()
 now_str = str(now)[:19]
