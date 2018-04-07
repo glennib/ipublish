@@ -89,23 +89,6 @@ if got_motion_line_number:
         e = sys.exc_info()[0]
         logging.warning('Error while opening file or looping through: ' + str(e))
 
-# Updating json
-parsed_json['motion_line_number'] = motion_line_number
-logging.info('Updating json')
-try:
-    with open(json_filename, 'w') as f:
-        json_string = json.dumps(parsed_json)
-        logging.info('Created json string `' + json_string + '`')
-        f.write(json_string + '\n')
-        logging.info('Wrote to json file')
-except:
-    e = sys.exc_info()[0]
-    logging.warning('Error while writing to json file: ' + str(e))
-
-# Create pastebin object
-pb = PastebinAPI()
-logging.info('Created PastebinAPI object.')
-
 # Create get ip function
 def get_ip_address(ifname):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -142,17 +125,24 @@ else:
     logging.info('No log lines appended to paste string.')
     paste_string = ip_str + '\n\nNo new log info.'
 
+# Create pastebin object
+pb = PastebinAPI()
+logging.info('Created PastebinAPI object.')
+
 # Paste it
 logging.info('Trying to upload to pastebin with name `' + paste_name + '` and message `' + ip_str + '` plus ' + str(num_new_log_lines) + ' motion log lines.')
 pburl = ''
+paste_successful = False
 try:
     pburl = pb.paste(dev_key, paste_string, my_key, paste_name, None, 'unlisted', '1D')
     logging.info('Successful pastebin url: ' + pburl)
+    paste_successful = True
 except PastebinError as e:
     logging.info('Got a pastebin error, checking if it is an http vs https issue.')
     if e.message.startswith('https://pastebin.com/'):
         pburl = e.message
         logging.info('Message starts with `https://pastebin.com/` so it is assumed to not be an actual error. Url: ' + pburl)
+        paste_successful = True
     else:
         logging.warning('Got a real pastebin error: ' + str(e))
 except:
@@ -174,6 +164,22 @@ if pburl:
         logging.warning('Writing to `' + urllog_filename + '` failed: ' + str(e))
 else:
     logging.warning('No pb url, no writing.')
+
+# Updating json
+if paste_successful:
+    parsed_json['motion_line_number'] = motion_line_number
+    logging.info('Updating json')
+    try:
+        with open(json_filename, 'w') as f:
+            json_string = json.dumps(parsed_json)
+            logging.info('Created json string `' + json_string + '`')
+            f.write(json_string + '\n')
+            logging.info('Wrote to json file')
+    except:
+        e = sys.exc_info()[0]
+        logging.warning('Error while writing to json file: ' + str(e))
+else:
+    logging.warning('As the paste was unsuccessful, we are not updating the json')
 
 logging.info('Ended script.')
 
