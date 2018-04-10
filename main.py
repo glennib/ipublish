@@ -166,7 +166,7 @@ except PastebinError as e:
 except:
     e = sys.exc_info()[0]
     logging.warning('Unknown error: ' + str(e))
-    logging.warning('Error message: ' + e.message)
+    logging.warning('Error message: ' + str(e.message))
 
 # Append url to url log
 if pburl:
